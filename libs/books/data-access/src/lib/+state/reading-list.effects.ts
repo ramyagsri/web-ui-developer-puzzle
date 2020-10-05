@@ -3,8 +3,10 @@ import { HttpClient } from '@angular/common/http';
 import { Actions, createEffect, ofType, OnInitEffects } from '@ngrx/effects';
 import { of } from 'rxjs';
 import { catchError, concatMap, exhaustMap, map } from 'rxjs/operators';
-import { ReadingListItem } from '@tmo/shared/models';
+import { ReadingListItem, Book } from '@tmo/shared/models';
 import * as ReadingListActions from './reading-list.actions';
+import { MatSnackBar } from '@angular/material/snack-bar';
+import { Store } from '@ngrx/store';
 
 @Injectable()
 export class ReadingListEffects implements OnInitEffects {
@@ -12,16 +14,14 @@ export class ReadingListEffects implements OnInitEffects {
     this.actions$.pipe(
       ofType(ReadingListActions.init),
       exhaustMap(() =>
-        this.http
-          .get<ReadingListItem[]>('/api/reading-list')
-          .pipe(
-            map(data =>
-              ReadingListActions.loadReadingListSuccess({ list: data })
-            )
+        this.http.get<ReadingListItem[]>('/api/reading-list').pipe(
+          map((data) =>
+            ReadingListActions.loadReadingListSuccess({ list: data })
+          ),
+          catchError((error) =>
+            of(ReadingListActions.loadReadingListError({ error }))
           )
-      ),
-      catchError(error =>
-        of(ReadingListActions.loadReadingListError({ error }))
+        )
       )
     )
   );
@@ -31,7 +31,16 @@ export class ReadingListEffects implements OnInitEffects {
       ofType(ReadingListActions.addToReadingList),
       concatMap(({ book }) =>
         this.http.post('/api/reading-list', book).pipe(
-          map(() => ReadingListActions.confirmedAddToReadingList({ book })),
+          map(() => {
+           this.snackBar.open('Added "'+ book.title +'" to reading list.', 'Undo', {
+             duration: 8000
+           })
+              .onAction()
+              .subscribe(() => {
+                this.store.dispatch(ReadingListActions.failedAddToReadingList({ book }))
+              });
+            return ReadingListActions.confirmedAddToReadingList({ book });
+          }),
           catchError(() =>
             of(ReadingListActions.failedAddToReadingList({ book }))
           )
@@ -45,9 +54,16 @@ export class ReadingListEffects implements OnInitEffects {
       ofType(ReadingListActions.removeFromReadingList),
       concatMap(({ item }) =>
         this.http.delete(`/api/reading-list/${item.bookId}`).pipe(
-          map(() =>
-            ReadingListActions.confirmedRemoveFromReadingList({ item })
-          ),
+          map(() => {
+            this.snackBar.open('Removed "'+ item.title +'" from reading list.', 'Undo', {
+              duration: 8000
+            })
+              .onAction()
+              .subscribe(() => {
+                this.store.dispatch(ReadingListActions.failedRemoveFromReadingList({ item }))
+              });
+            return ReadingListActions.confirmedRemoveFromReadingList({ item });
+          }),
           catchError(() =>
             of(ReadingListActions.failedRemoveFromReadingList({ item }))
           )
@@ -60,5 +76,10 @@ export class ReadingListEffects implements OnInitEffects {
     return ReadingListActions.init();
   }
 
-  constructor(private actions$: Actions, private http: HttpClient) {}
+  constructor(
+    private actions$: Actions,
+    private http: HttpClient,
+    private readonly snackBar: MatSnackBar,
+    private store: Store
+  ) {}
 }

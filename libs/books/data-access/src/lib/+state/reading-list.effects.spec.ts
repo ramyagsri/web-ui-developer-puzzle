@@ -3,6 +3,7 @@ import { ReplaySubject } from 'rxjs';
 import { provideMockActions } from '@ngrx/effects/testing';
 import { provideMockStore } from '@ngrx/store/testing';
 import { HttpTestingController } from '@angular/common/http/testing';
+import { MatSnackBar } from '@angular/material/snack-bar';
 
 import { SharedTestingModule } from '@tmo/shared/testing';
 import { ReadingListEffects } from './reading-list.effects';
@@ -19,7 +20,8 @@ describe('ToReadEffects', () => {
       providers: [
         ReadingListEffects,
         provideMockActions(() => actions),
-        provideMockStore()
+        provideMockStore(),
+        { provide: MatSnackBar}
       ]
     });
 

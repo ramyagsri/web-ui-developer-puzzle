@@ -32,12 +32,13 @@
           <p [innerHTML]="book.description"></p>
           <div>
             <button
+              [attr.data-testing]="book.isAdded ? '' : 'add-to-reading-list'"
               mat-flat-button
               color="primary"
               (click)="addBookToReadingList(book)"
               [disabled]="book.isAdded"
             >
-              Want to Read
+              {{book.finished ? 'Finished' : 'Want to Read'}}
             </button>
           </div>
         </div>

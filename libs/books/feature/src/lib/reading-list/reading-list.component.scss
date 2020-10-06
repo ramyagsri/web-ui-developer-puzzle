@@ -11,7 +11,6 @@
 .reading-list-item {
   display: flex;
   justify-content: center;
-  margin-bottom: $spacing-xs;
   width: 100%;
 
   > * {
@@ -38,6 +37,23 @@
   text-overflow: ellipsis;
   overflow: hidden;
   white-space: nowrap;
+}
+
+.finished-text {
+  margin-top: $spacing-xxs;
+}
+
+.finished-text,
+.mark-finish-text {
+  font-size: 0.75rem;
+  font-weight: 400;
+  margin-left: $spacing-med;
+  margin-bottom: $spacing-xs;
+}
+
+.finished-text,
+.mark-finish-circle {
+  color: $green;
 }
 
 .empty {
